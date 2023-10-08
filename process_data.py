@@ -20,7 +20,7 @@
 import pandas as pd
 
 print("opening src: stops...")
-stopsFields = ["ArRId", "ArRName", "ArRType", "ZdAId", "ArRGeopoint", "ArRTown", "ArRPostalRegion"]
+stopsFields = ["ArRId", "ZdAId", "ArRTown", "ArRPostalRegion"]
 dfStops = pd.read_csv("./src/arrets.csv", usecols=stopsFields, header=0, sep=";", on_bad_lines="warn")
 
 print("opening src: lines...")
@@ -28,7 +28,7 @@ lineFields = ["ID_Line", "ShortName_Line", "TransportMode", "TransportSubmode", 
 dfLines = pd.read_csv("./src/referentiel-des-lignes.csv", usecols=lineFields, header=0, sep=";", on_bad_lines="warn")
 
 print("opening src: line stops...")
-lineStopsFields = ["route_id", "route_long_name", "stop_id", "stop_name", "stop_lon", "stop_lat", "Nom_commune"]
+lineStopsFields = ["route_id", "route_long_name", "stop_id", "stop_name", "stop_lon", "stop_lat"]
 dfLineStops = pd.read_csv("./src/arrets-lignes.csv", usecols=lineStopsFields, header=0, sep=";", on_bad_lines="warn")
 
 
@@ -79,7 +79,7 @@ dfMerge = dfMerge.sort_values(by=["stop_id", "area_id"])
 
 print("removing duplicate columns...")
 # merge duplicate columns resulting from merging stops twice
-duplicate_cols = ["ArRId","ArRName","ArRType","ZdAId","ArRGeopoint","ArRTown","ArRPostalRegion"]
+duplicate_cols = ["ArRId","ZdAId","ArRTown","ArRPostalRegion"]
 renamed_cols = {}
 for col in duplicate_cols:
     renamed_cols[col + "_x"] = col
@@ -93,13 +93,35 @@ for col in duplicate_cols:
 
 
 
-print("removing duplicate stations")
+print("removing duplicate stations...")
 dfMerge = dfMerge.drop_duplicates(subset=["stop_id", "area_id", "route_id"])
 
+print("remove duplicate id column...s")
+dfMerge = dfMerge.drop(["ZdAId", "ArRId", "ID_Line"], axis=1)
 
 
-print("create unique id")
+
+print("create unique id...")
 dfMerge["id"] = dfMerge[["stop_id", "area_id", "route_id"]].astype(str).apply("_".join, axis=1)
+
+
+
+print("convert postal region to int...")
+dfMerge["ArRPostalRegion"] = dfMerge["ArRPostalRegion"].astype("Int64")
+
+
+
+print("rename columns...")
+dfMerge = dfMerge.rename(columns={\
+    "ArRTown": "town",\
+    "ArRPostalRegion": "postal_region",\
+    "ShortName_Line": "route_short_name",\
+    "TransportMode": "transport_mode",\
+    "TransportSubmode": "transport_submode",\
+    "OperatorName": "operator_name",\
+    "ColourWeb_hexa": "background_color",\
+    "TextColourWeb_hexa": "text_color"\
+})
 
 
 
