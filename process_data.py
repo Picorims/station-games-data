@@ -129,6 +129,7 @@ print("exporting in out folder...")
 dfMerge = dfMerge.set_index("id")
 dfMerge.to_csv("./out/stops_data.csv")
 dfMerge.to_json("./out/stops_data.json", indent=2, orient="index")
+dfMerge.to_json("./out/stops_data_minified.json")
 
 
 
